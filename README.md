@@ -9,6 +9,7 @@ Docker image for [soco-cli](https://github.com/avantrec/soco-cli), providing a c
 ## Features
 
 - Pre-installed latest soco-cli
+- Lightweight multi-stage build (arm64 architecture)
 - CLI mode: execute Sonos control commands directly
 - Interactive mode: enter interactive command-line interface
 - HTTP API mode: start HTTP API server (default port 8000)
