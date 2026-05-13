@@ -70,5 +70,5 @@ jobs:
           provenance: false
           sbom: false
 
-      - name: Image digest
-        run: echo "Pushed image digest: ${{ steps.build-push.outputs.digest }}"
+      - name: Show image digest
+        run: echo "Pushed image with digest"
