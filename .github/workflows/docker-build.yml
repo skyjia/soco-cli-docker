@@ -41,27 +41,32 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ]; then
             # Extract version from git tag (e.g., v0.1.0 -> 0.1.0)
             TAG="${GITHUB_REF#refs/tags/v}"
-            echo "tag=${TAG}" >> $GITHUB_OUTPUT
-            echo "tags=${TAG},latest" >> $GITHUB_OUTPUT
+            echo "tags<<EOF" >> $GITHUB_OUTPUT
+            echo "${{ env.DOCKER_IMAGE }}:${TAG}" >> $GITHUB_OUTPUT
+            echo "${{ env.DOCKER_IMAGE }}:latest" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
           else
             TAG="${{ github.event.inputs.tag }}"
             if [ "${TAG}" = "latest" ]; then
-              echo "tags=latest" >> $GITHUB_OUTPUT
+              echo "tags=${{ env.DOCKER_IMAGE }}:latest" >> $GITHUB_OUTPUT
             else
               # Remove 'v' prefix if present
               TAG="${TAG#v}"
-              echo "tags=${TAG},latest" >> $GITHUB_OUTPUT
+              echo "tags<<EOF" >> $GITHUB_OUTPUT
+              echo "${{ env.DOCKER_IMAGE }}:${TAG}" >> $GITHUB_OUTPUT
+              echo "${{ env.DOCKER_IMAGE }}:latest" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
             fi
           fi
 
       - name: Build and push
+        id: build-push
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: |
-            ${{ env.DOCKER_IMAGE }}:${{ steps.tag.outputs.tags }}
+          tags: ${{ steps.tag.outputs.tags }}
           provenance: false
           sbom: false
 
