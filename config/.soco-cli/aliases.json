@@ -1,0 +1,15 @@
+{
+  "aliases": {
+    "p": "play",
+    "s": "pause",
+    "v": "volume",
+    "n": "next",
+    "b": "previous",
+    "l": "list",
+    "i": "info"
+  },
+  "sequences": {
+    "start": "play:volume 30",
+    "stop": "pause:volume 0"
+  }
+}

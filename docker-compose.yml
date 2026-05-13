@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  soco-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: soco-cli:latest
+    container_name: soco-cli
+    environment:
+      - LOG_LEVEL=INFO
+    volumes:
+      # Config directory - persists settings and aliases
+      - ./config:/config
+      # Local music library - read-only access
+      # Replace with your actual music library path
+      - ${MUSIC_PATH:-/path/to/your/music}:/music:ro
+    # Host network mode required for Sonos device discovery
+    network_mode: host
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
