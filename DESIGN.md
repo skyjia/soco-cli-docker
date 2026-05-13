@@ -6,6 +6,16 @@
 2. **Secure**: Non-root user execution, read-only music library mount
 3. **Simple**: Default CLI mode, user chooses runtime mode as needed
 4. **Persistent**: Config directory mount for data persistence
+5. **Multi-platform**: Support for linux/amd64 and linux/arm64 architectures
+
+## Supported Platforms
+
+| Platform | Architecture | Description |
+|----------|-------------|-------------|
+| linux/amd64 | x86_64 | Standard servers, desktops, cloud VMs |
+| linux/arm64 | ARM 64-bit | Apple Silicon Mac, Raspberry Pi 4, ARM cloud instances |
+
+> **Windows Support**: Windows users can run this image through Docker Desktop with WSL2, which transparently runs Linux containers on Windows.
 
 ## Architecture Overview
 
@@ -146,6 +156,45 @@ sonos http-api-server -p 8000
 | Multi-stage build | Build tools excluded from final image |
 | Slim base image | Reduces ~70% size |
 | No-cache install | `pip install --no-cache-dir` |
+| Multi-platform build | Docker Buildx with QEMU for cross-architecture builds |
+
+## Multi-Platform Build Process
+
+### Build Tools
+
+- **Docker Buildx**: Build multi-platform images
+- **QEMU**: Emulate arm64 on amd64 hosts (via `docker/setup-qemu-action`)
+
+### GitHub Actions Workflow
+
+The `.github/workflows/docker-build.yml` handles multi-platform builds:
+
+1. Triggered by git tags (v*) or manual dispatch
+2. Sets up QEMU for arm64 emulation
+3. Uses Buildx to build for both platforms
+4. Pushes multi-platform manifest to Docker Hub
+
+### Local Build (Single Platform)
+
+```bash
+# Build for current platform
+docker build -t skyjia/soco-cli:test .
+
+# Build for specific platform (requires buildx)
+docker buildx build --platform linux/amd64 -t skyjia/soco-cli:test .
+docker buildx build --platform linux/arm64 -t skyjia/soco-cli:test .
+```
+
+### Local Build (Multi-Platform)
+
+```bash
+# Setup buildx
+docker buildx create --name multiarch --use
+
+# Build and push multi-platform image
+docker buildx build --platform linux/amd64,linux/arm64 \
+  -t skyjia/soco-cli:test --push .
+```
 
 ## Verification Tests
 

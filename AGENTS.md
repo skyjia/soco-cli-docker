@@ -21,7 +21,7 @@ Key features:
 | Item | Specification |
 |------|---------------|
 | Base image | Python >= 3.13 (slim) |
-| Architecture | arm64 only |
+| Platforms | linux/amd64, linux/arm64 |
 | User | Non-root (`sonos`) |
 | HTTP API port | 8000 (configurable via CLI) |
 | Network mode | `host` (required for SSDP multicast) |

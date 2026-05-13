@@ -10,18 +10,28 @@ Docker image for [soco-cli](https://github.com/avantrec/soco-cli), providing a c
 ## Features
 
 - Pre-installed latest soco-cli
-- Lightweight multi-stage build (arm64 architecture)
+- Lightweight multi-stage build
+- Multi-platform support: linux/amd64, linux/arm64
 - CLI mode: execute Sonos control commands directly
 - Interactive mode: enter interactive command-line interface
 - HTTP API mode: start HTTP API server (default port 8000)
 - Non-root user execution for security
 - Persistent config directory and music library
 
+## Supported Platforms
+
+| Platform | Architecture | Use Case |
+|----------|-------------|----------|
+| `linux/amd64` | x86_64 | Standard servers, desktops, cloud VMs |
+| `linux/arm64` | ARM 64-bit | Apple Silicon Mac, Raspberry Pi 4, ARM cloud instances |
+
+> **Windows Users**: Docker Desktop on Windows uses WSL2 to run Linux containers. This image works on Windows through Docker Desktop without any modifications.
+
 ## Requirements
 
 - Docker installed on your system
 - Sonos devices connected to the same local network
-- arm64 architecture host (e.g., Apple Silicon Mac, Raspberry Pi 4)
+- For Windows: Docker Desktop with WSL2 enabled
 
 ## Quick Start
 

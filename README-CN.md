@@ -10,18 +10,28 @@
 ## 功能特性
 
 - 预装最新版 soco-cli
-- 轻量级多阶段构建（arm64 架构）
+- 轻量级多阶段构建
+- 多平台支持：linux/amd64, linux/arm64
 - CLI 模式：直接执行 Sonos 控制命令
 - 交互模式：进入交互式命令行界面
 - HTTP API 模式：启动 HTTP API 服务器（默认端口 8000）
 - 非 root 用户运行，确保安全
 - 配置目录和音乐库持久化
 
+## 支持平台
+
+| 平台 | 架构 | 适用场景 |
+|------|------|----------|
+| `linux/amd64` | x86_64 | 标准服务器、桌面、云虚拟机 |
+| `linux/arm64` | ARM 64位 | Apple Silicon Mac、Raspberry Pi 4、ARM 云实例 |
+
+> **Windows 用户**：Windows 上的 Docker Desktop 通过 WSL2 运行 Linux 容器。本镜像可在 Windows 上通过 Docker Desktop 直接使用，无需额外配置。
+
 ## 系统要求
 
 - 已安装 Docker
 - Sonos 设备连接到同一局域网
-- arm64 架构主机（如 Apple Silicon Mac、Raspberry Pi 4）
+- Windows 用户需启用 Docker Desktop 的 WSL2 功能
 
 ## 快速开始
 
