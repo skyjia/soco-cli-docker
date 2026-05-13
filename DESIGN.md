@@ -170,9 +170,19 @@ sonos http-api-server -p 8000
 The `.github/workflows/docker-build.yml` handles multi-platform builds:
 
 1. Triggered by git tags (v*) or manual dispatch
-2. Sets up QEMU for arm64 emulation
-3. Uses Buildx to build for both platforms
-4. Pushes multi-platform manifest to Docker Hub
+2. Builds single-architecture images (`amd64`, `arm64`)
+3. Builds multi-architecture manifest (`latest`, version tags)
+
+### Image Tag Strategy
+
+| Tag Type | Tags | Description |
+|----------|------|-------------|
+| Architecture-specific | `amd64`, `arm64` | Single-architecture images |
+| Multi-arch manifest | `latest`, `vX.Y.Z` | Cross-platform manifest (auto-detect) |
+
+**Build flow**:
+1. `build-arch` job: Builds single-arch images with matrix strategy
+2. `build-manifest` job: Creates multi-arch manifest combining both platforms
 
 ### Local Build (Single Platform)
 

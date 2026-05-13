@@ -27,7 +27,7 @@ Key features:
 | Network mode | `host` (required for SSDP multicast) |
 | SSDP multicast | 239.255.255.250:1900 (UDP) |
 | Environment variables | `LOG_LEVEL` |
-| Image tags | Semantic versioning (`latest`, `v1.0.0`, etc.) |
+| Image tags | `latest`, `vX.Y.Z` (multi-arch), `amd64`, `arm64` (single-arch) |
 | Update policy | Regular updates for latest soco-cli and security patches |
 | License | MIT |
 

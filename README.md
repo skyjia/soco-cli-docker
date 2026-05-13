@@ -27,6 +27,24 @@ Docker image for [soco-cli](https://github.com/avantrec/soco-cli), providing a c
 
 > **Windows Users**: Docker Desktop on Windows uses WSL2 to run Linux containers. This image works on Windows through Docker Desktop without any modifications.
 
+## Image Tags
+
+| Tag | Type | Description |
+|-----|------|-------------|
+| `latest` | Multi-arch | Auto-detects your architecture (recommended) |
+| `vX.Y.Z` | Multi-arch | Version-specific, auto-detects architecture |
+| `amd64` | Single-arch | x86_64 architecture only |
+| `arm64` | Single-arch | ARM 64-bit architecture only |
+
+```bash
+# Auto-detect architecture (recommended)
+docker pull skyjia/soco-cli:latest
+
+# Force specific architecture
+docker pull skyjia/soco-cli:amd64
+docker pull skyjia/soco-cli:arm64
+```
+
 ## Requirements
 
 - Docker installed on your system

@@ -15,7 +15,71 @@ env:
   DOCKER_IMAGE: skyjia/soco-cli
 
 jobs:
-  build:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.tag.outputs.version }}
+      has-version: ${{ steps.tag.outputs.has-version }}
+    steps:
+      - name: Determine version tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            # Extract version from git tag (e.g., v0.1.0 -> 0.1.0)
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+            echo "has-version=true" >> $GITHUB_OUTPUT
+          else
+            TAG="${{ github.event.inputs.tag }}"
+            if [ "${TAG}" = "latest" ]; then
+              echo "version=" >> $GITHUB_OUTPUT
+              echo "has-version=false" >> $GITHUB_OUTPUT
+            else
+              # Remove 'v' prefix if present
+              VERSION="${TAG#v}"
+              echo "version=${VERSION}" >> $GITHUB_OUTPUT
+              echo "has-version=true" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+  build-arch:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - platform: linux/amd64
+            suffix: amd64
+          - platform: linux/arm64
+            suffix: arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push (architecture-specific)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          push: true
+          tags: ${{ env.DOCKER_IMAGE }}:${{ matrix.suffix }}
+          provenance: false
+          sbom: false
+
+  build-manifest:
+    needs: [prepare, build-arch]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -35,40 +99,24 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Determine image tag
-        id: tag
-        run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
-            # Extract version from git tag (e.g., v0.1.0 -> 0.1.0)
-            TAG="${GITHUB_REF#refs/tags/v}"
-            echo "tags<<EOF" >> $GITHUB_OUTPUT
-            echo "${{ env.DOCKER_IMAGE }}:${TAG}" >> $GITHUB_OUTPUT
-            echo "${{ env.DOCKER_IMAGE }}:latest" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          else
-            TAG="${{ github.event.inputs.tag }}"
-            if [ "${TAG}" = "latest" ]; then
-              echo "tags=${{ env.DOCKER_IMAGE }}:latest" >> $GITHUB_OUTPUT
-            else
-              # Remove 'v' prefix if present
-              TAG="${TAG#v}"
-              echo "tags<<EOF" >> $GITHUB_OUTPUT
-              echo "${{ env.DOCKER_IMAGE }}:${TAG}" >> $GITHUB_OUTPUT
-              echo "${{ env.DOCKER_IMAGE }}:latest" >> $GITHUB_OUTPUT
-              echo "EOF" >> $GITHUB_OUTPUT
-            fi
-          fi
-
-      - name: Build and push
-        id: build-push
+      - name: Build and push (multi-arch manifest)
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ steps.tag.outputs.tags }}
+          tags: |
+            ${{ env.DOCKER_IMAGE }}:latest
+            ${{ needs.prepare.outputs.has-version == 'true' && format('{0}:{1}', env.DOCKER_IMAGE, needs.prepare.outputs.version) || '' }}
           provenance: false
           sbom: false
 
-      - name: Show image digest
-        run: echo "Pushed image with digest"
+      - name: Show pushed tags
+        run: |
+          echo "Pushed tags:"
+          echo "  - ${DOCKER_IMAGE}:amd64"
+          echo "  - ${DOCKER_IMAGE}:arm64"
+          echo "  - ${DOCKER_IMAGE}:latest"
+          if [ "${{ needs.prepare.outputs.has-version }}" = "true" ]; then
+            echo "  - ${DOCKER_IMAGE}:${{ needs.prepare.outputs.version }}"
+          fi

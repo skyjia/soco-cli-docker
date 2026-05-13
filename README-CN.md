@@ -27,6 +27,24 @@
 
 > **Windows 用户**：Windows 上的 Docker Desktop 通过 WSL2 运行 Linux 容器。本镜像可在 Windows 上通过 Docker Desktop 直接使用，无需额外配置。
 
+## 镜像标签
+
+| 标签 | 类型 | 说明 |
+|------|------|------|
+| `latest` | 跨架构 | 自动检测本机架构（推荐） |
+| `vX.Y.Z` | 跨架构 | 指定版本，自动检测架构 |
+| `amd64` | 单架构 | 仅 x86_64 架构 |
+| `arm64` | 单架构 | 仅 ARM 64位架构 |
+
+```bash
+# 自动检测架构（推荐）
+docker pull skyjia/soco-cli:latest
+
+# 强制指定架构
+docker pull skyjia/soco-cli:amd64
+docker pull skyjia/soco-cli:arm64
+```
+
 ## 系统要求
 
 - 已安装 Docker
