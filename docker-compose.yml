@@ -2,10 +2,7 @@ version: '3.8'
 
 services:
   soco-cli:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: soco-cli:latest
+    image: skyjia/soco-cli:latest
     container_name: soco-cli
     environment:
       - LOG_LEVEL=INFO

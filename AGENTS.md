@@ -6,6 +6,8 @@ This file provides guidance to AI coding assistants (Claude Code, Cursor, GitHub
 
 Docker image for [soco-cli](https://github.com/avantrec/soco-cli), a CLI tool for managing and controlling Sonos devices.
 
+**Docker Hub**: [skyjia/soco-cli](https://hub.docker.com/r/skyjia/soco-cli)
+
 Key features:
 - Pre-installed soco-cli (latest version at build time)
 - Interactive Shell Mode for device management
@@ -23,6 +25,8 @@ Key features:
 | User | Non-root (`sonos`) |
 | HTTP API port | 8000 (configurable via CLI) |
 | Environment variables | `LOG_LEVEL` |
+| Image tags | Semantic versioning (`latest`, `v1.0.0`, etc.) |
+| Update policy | Regular updates for latest soco-cli and security patches |
 | License | MIT |
 
 ## Project Structure
@@ -41,20 +45,23 @@ Key features:
 ## Build and Test Commands
 
 ```bash
-# Build image
-docker build -t soco-cli:test .
+# Pull from Docker Hub
+docker pull skyjia/soco-cli:latest
+
+# Build image locally
+docker build -t skyjia/soco-cli:test .
 
 # Verify non-root user
-docker run --rm --entrypoint "" soco-cli:test whoami
+docker run --rm --entrypoint "" skyjia/soco-cli:test whoami
 
 # Test CLI
-docker run --rm --network host soco-cli:test --help
+docker run --rm --network host skyjia/soco-cli:test --help
 
 # Test interactive mode
-docker run -it --rm --network host soco-cli:test -i
+docker run -it --rm --network host skyjia/soco-cli:test -i
 
 # Test HTTP API
-docker run -d --network host soco-cli:test http-api-server -p 8000
+docker run -d --network host skyjia/soco-cli:test http-api-server -p 8000
 ```
 
 ## Coding Guidelines

@@ -4,6 +4,8 @@
 
 用于 [soco-cli](https://github.com/avantrec/soco-cli) 的 Docker 镜像，提供便捷的 Sonos 设备管理环境。
 
+**Docker Hub**: [skyjia/soco-cli](https://hub.docker.com/r/skyjia/soco-cli)
+
 ## 功能特性
 
 - 预装最新版 soco-cli
@@ -15,10 +17,16 @@
 
 ## 快速开始
 
-### 构建镜像
+### 从 Docker Hub 拉取
 
 ```bash
-docker build -t soco-cli:latest .
+docker pull skyjia/soco-cli:latest
+```
+
+### 构建镜像（可选）
+
+```bash
+docker build -t skyjia/soco-cli:latest .
 ```
 
 ### 使用 Docker Compose
@@ -40,29 +48,29 @@ docker-compose exec soco-cli sonos --help
 
 ```bash
 # 显示帮助
-docker run --rm --network host soco-cli:latest --help
+docker run --rm --network host skyjia/soco-cli:latest --help
 
 # 列出所有设备
-docker run --rm --network host soco-cli:latest list
+docker run --rm --network host skyjia/soco-cli:latest list
 
 # 播放音乐
-docker run --rm --network host soco-cli:latest "Living Room" play
+docker run --rm --network host skyjia/soco-cli:latest "Living Room" play
 
 # 设置音量
-docker run --rm --network host soco-cli:latest "Living Room" volume 50
+docker run --rm --network host skyjia/soco-cli:latest "Living Room" volume 50
 ```
 
 ### 交互模式
 
 ```bash
-docker run -it --rm --network host soco-cli:latest -i
+docker run -it --rm --network host skyjia/soco-cli:latest -i
 ```
 
 ### HTTP API 模式
 
 ```bash
 # 启动 HTTP API 服务器（端口 8000）
-docker run -d --network host soco-cli:latest http-api-server -p 8000
+docker run -d --network host skyjia/soco-cli:latest http-api-server -p 8000
 
 # 测试 API
 curl http://localhost:8000/Living%20Room/play

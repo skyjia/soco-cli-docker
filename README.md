@@ -4,6 +4,8 @@
 
 Docker image for [soco-cli](https://github.com/avantrec/soco-cli), providing a convenient environment for managing Sonos devices.
 
+**Docker Hub**: [skyjia/soco-cli](https://hub.docker.com/r/skyjia/soco-cli)
+
 ## Features
 
 - Pre-installed latest soco-cli
@@ -15,10 +17,16 @@ Docker image for [soco-cli](https://github.com/avantrec/soco-cli), providing a c
 
 ## Quick Start
 
-### Build Image
+### Pull from Docker Hub
 
 ```bash
-docker build -t soco-cli:latest .
+docker pull skyjia/soco-cli:latest
+```
+
+### Build Image (Optional)
+
+```bash
+docker build -t skyjia/soco-cli:latest .
 ```
 
 ### Using Docker Compose
@@ -40,29 +48,29 @@ docker-compose exec soco-cli sonos --help
 
 ```bash
 # Show help
-docker run --rm --network host soco-cli:latest --help
+docker run --rm --network host skyjia/soco-cli:latest --help
 
 # List all devices
-docker run --rm --network host soco-cli:latest list
+docker run --rm --network host skyjia/soco-cli:latest list
 
 # Play music
-docker run --rm --network host soco-cli:latest "Living Room" play
+docker run --rm --network host skyjia/soco-cli:latest "Living Room" play
 
 # Set volume
-docker run --rm --network host soco-cli:latest "Living Room" volume 50
+docker run --rm --network host skyjia/soco-cli:latest "Living Room" volume 50
 ```
 
 ### Interactive Mode
 
 ```bash
-docker run -it --rm --network host soco-cli:latest -i
+docker run -it --rm --network host skyjia/soco-cli:latest -i
 ```
 
 ### HTTP API Mode
 
 ```bash
 # Start HTTP API server (port 8000)
-docker run -d --network host soco-cli:latest http-api-server -p 8000
+docker run -d --network host skyjia/soco-cli:latest http-api-server -p 8000
 
 # Test API
 curl http://localhost:8000/Living%20Room/play
