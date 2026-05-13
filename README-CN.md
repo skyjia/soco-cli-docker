@@ -112,6 +112,7 @@ curl http://localhost:8000/Living%20Room/volume/50
 
 - [soco-cli GitHub](https://github.com/avantrec/soco-cli)
 - [soco-cli 文档](https://github.com/avantrec/soco-cli#readme)
+- [Sonos 官方文档](https://docs.sonos.com/)
 
 ## 许可协议
 

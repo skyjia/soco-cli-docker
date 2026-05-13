@@ -112,6 +112,7 @@ Verify the port is not occupied and firewall allows access.
 
 - [soco-cli GitHub](https://github.com/avantrec/soco-cli)
 - [soco-cli Documentation](https://github.com/avantrec/soco-cli#readme)
+- [Sonos Official Documentation](https://docs.sonos.com/)
 
 ## License
 
