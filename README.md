@@ -16,6 +16,12 @@ Docker image for [soco-cli](https://github.com/avantrec/soco-cli), providing a c
 - Non-root user execution for security
 - Persistent config directory and music library
 
+## Requirements
+
+- Docker installed on your system
+- Sonos devices connected to the same local network
+- arm64 architecture host (e.g., Apple Silicon Mac, Raspberry Pi 4)
+
 ## Quick Start
 
 ### Pull from Docker Hub

@@ -16,6 +16,12 @@
 - 非 root 用户运行，确保安全
 - 配置目录和音乐库持久化
 
+## 系统要求
+
+- 已安装 Docker
+- Sonos 设备连接到同一局域网
+- arm64 架构主机（如 Apple Silicon Mac、Raspberry Pi 4）
+
 ## 快速开始
 
 ### 从 Docker Hub 拉取
