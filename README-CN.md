@@ -4,6 +4,7 @@
 
 用于 [soco-cli](https://github.com/avantrec/soco-cli) 的 Docker 镜像，提供便捷的 Sonos 设备管理环境。
 
+**GitHub**: [skyjia/soco-cli-docker](https://github.com/skyjia/soco-cli-docker)
 **Docker Hub**: [skyjia/soco-cli](https://hub.docker.com/r/skyjia/soco-cli)
 
 ## 功能特性
