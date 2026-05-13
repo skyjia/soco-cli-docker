@@ -102,11 +102,28 @@ curl http://localhost:8000/Living%20Room/volume/50
 
 使用 `network_mode: host` 以便发现局域网内的 Sonos 设备。这是最简单的配置方式，无需额外网络设置。
 
+### SSDP 发现机制
+
+soco-cli 使用 SSDP multicast 进行设备发现：
+- **Multicast 地址**: 239.255.255.250
+- **UDP 端口**: 1900
+- **传出端口**: 可变（ephemeral 端口范围，Linux 上为 32768–60999）
+
+如果防火墙阻止 ephemeral 端口范围的传入 UDP 流量，标准发现将失败并回退到较慢的网络扫描发现。为确保快速发现：
+
+```bash
+# 示例：在 Linux 上开放 ephemeral UDP 端口（ufw）
+sudo ufw allow 32768:60999/udp
+```
+
 ## 常见问题
 
 ### 无法发现 Sonos 设备
 
-确保容器使用 host 网络模式，并且宿主机与 Sonos 设备在同一局域网。
+1. 确保容器使用 `--network host` 模式
+2. 验证宿主机与 Sonos 设备在同一局域网
+3. 检查防火墙设置 - 允许 ephemeral 端口范围的传入 UDP 流量（如 32768–60999）
+4. 如果发现速度慢，可使用 `-l` 参数启用缓存发现
 
 ### 配置不保存
 

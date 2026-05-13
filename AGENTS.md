@@ -24,6 +24,8 @@ Key features:
 | Architecture | arm64 only |
 | User | Non-root (`sonos`) |
 | HTTP API port | 8000 (configurable via CLI) |
+| Network mode | `host` (required for SSDP multicast) |
+| SSDP multicast | 239.255.255.250:1900 (UDP) |
 | Environment variables | `LOG_LEVEL` |
 | Image tags | Semantic versioning (`latest`, `v1.0.0`, etc.) |
 | Update policy | Regular updates for latest soco-cli and security patches |

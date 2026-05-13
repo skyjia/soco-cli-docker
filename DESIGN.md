@@ -94,6 +94,28 @@ Reasons for using `network_mode: host`:
 - Sonos device discovery relies on SSDP/UPnP protocol
 - Requires direct access to LAN broadcast addresses
 - Avoids discovery delays or failures caused by NAT
+- Supports UDP multicast for SSDP discovery
+
+### SSDP Discovery Details
+
+soco-cli uses SSDP (Simple Service Discovery Protocol) multicast for device discovery:
+
+| Parameter | Value |
+|-----------|-------|
+| Multicast address | 239.255.255.250 |
+| UDP port | 1900 |
+| Outgoing port range | Ephemeral ports (e.g., 32768–60999 on Linux) |
+
+**Discovery flow**:
+1. Container sends SSDP multicast request via UDP port 1900
+2. Outgoing port is variable (OS-dependent ephemeral range)
+3. Sonos devices respond to the outgoing port
+4. If firewall blocks incoming UDP on ephemeral range, discovery falls back to slower network scan
+
+**Firewall configuration** (Linux example):
+```bash
+sudo ufw allow 32768:60999/udp
+```
 
 ### HTTP API Port
 

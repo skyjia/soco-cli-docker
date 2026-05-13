@@ -102,11 +102,28 @@ curl http://localhost:8000/Living%20Room/volume/50
 
 Uses `network_mode: host` for discovering Sonos devices in the local network. This is the simplest configuration with no additional network setup required.
 
+### SSDP Discovery Mechanism
+
+soco-cli uses SSDP multicast for device discovery:
+- **Multicast address**: 239.255.255.250
+- **UDP port**: 1900
+- **Outgoing port**: Variable (ephemeral port range, e.g., 32768–60999 on Linux)
+
+If the firewall blocks incoming UDP traffic on the ephemeral port range, standard discovery will fail and fall back to slower network scan discovery. To ensure fast discovery:
+
+```bash
+# Example: Open ephemeral UDP ports on Linux (ufw)
+sudo ufw allow 32768:60999/udp
+```
+
 ## FAQ
 
 ### Cannot discover Sonos devices
 
-Ensure the container uses host network mode and the host machine is on the same LAN as Sonos devices.
+1. Ensure the container uses `--network host` mode
+2. Verify the host machine is on the same LAN as Sonos devices
+3. Check firewall settings - allow incoming UDP traffic on ephemeral ports (e.g., 32768–60999)
+4. If discovery is slow, consider using cached discovery with `-l` flag
 
 ### Configuration not saved
 

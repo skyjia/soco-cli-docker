@@ -12,7 +12,9 @@ services:
       # Local music library - read-only access
       # Replace with your actual music library path
       - ${MUSIC_PATH:-/path/to/your/music}:/music:ro
-    # Host network mode required for Sonos device discovery
+    # Host network mode required for SSDP multicast discovery
+    # SSDP uses UDP multicast (239.255.255.250:1900)
+    # Ensure firewall allows incoming UDP on ephemeral port range (e.g., 32768-60999)
     network_mode: host
     restart: unless-stopped
     stdin_open: true
