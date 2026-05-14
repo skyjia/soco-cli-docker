@@ -80,20 +80,38 @@ docker-compose exec soco-cli sonos --help
 
 ## Usage Examples
 
-### CLI Mode
+This image includes three CLI tools:
+- **sonos**: Control Sonos speakers (main command)
+- **sonos-discover**: Discover and cache Sonos devices on network
+- **sonos-http-api-server**: Run HTTP API server for remote control
+
+### Device Discovery
+
+```bash
+# Discover Sonos devices on network
+docker run --rm --network host skyjia/soco-cli:latest discover
+
+# List all zones/devices (using sonos CLI)
+docker run --rm --network host skyjia/soco-cli:latest zones
+```
+
+### Speaker Control (sonos CLI)
 
 ```bash
 # Show help
-docker run --rm --network host skyjia/soco-cli:latest --help
+docker run --rm --network host skyjia/soco-cli:latest sonos --help
 
-# List all devices
-docker run --rm --network host skyjia/soco-cli:latest list
+# Get speaker info
+docker run --rm --network host skyjia/soco-cli:latest "Living Room" info
 
 # Play music
 docker run --rm --network host skyjia/soco-cli:latest "Living Room" play
 
 # Set volume
 docker run --rm --network host skyjia/soco-cli:latest "Living Room" volume 50
+
+# List favorites
+docker run --rm --network host skyjia/soco-cli:latest "Living Room" list_favs
 ```
 
 ### Interactive Mode
@@ -102,7 +120,7 @@ docker run --rm --network host skyjia/soco-cli:latest "Living Room" volume 50
 docker run -it --rm --network host skyjia/soco-cli:latest -i
 ```
 
-### HTTP API Mode
+### HTTP API Server
 
 ```bash
 # Start HTTP API server (port 8000)

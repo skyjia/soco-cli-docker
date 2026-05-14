@@ -10,6 +10,8 @@ Docker image for [soco-cli](https://github.com/avantrec/soco-cli), a CLI tool fo
 
 Key features:
 - Pre-installed soco-cli (latest version at build time)
+- Three CLI tools: sonos, sonos-discover, sonos-http-api-server
+- Smart entrypoint routing based on command argument
 - Interactive Shell Mode for device management
 - HTTP API Server mode (default port 8000, configurable via CLI)
 - Config directory and local music library volume mounts

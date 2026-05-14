@@ -137,11 +137,34 @@ sonos http-api-server -p 8000
 
 ## Runtime Modes
 
-| Mode | Command | Usage |
-|------|---------|-------|
-| CLI | `sonos <args>` | Single command execution |
-| Interactive | `sonos -i` | Interactive management |
-| HTTP API | `sonos http-api-server -p <port>` | Service integration |
+The image includes three CLI tools with smart routing via `entrypoint.sh`:
+
+| Tool | Entrypoint Command | Usage |
+|------|-------------------|-------|
+| sonos | `<speaker> <action>` or direct args | Speaker control |
+| sonos-discover | `discover [options]` | Device discovery |
+| sonos-http-api-server | `http-api-server [opts]` | HTTP API service |
+
+### Entrypoint Smart Routing
+
+```bash
+# Device discovery
+docker run --rm --network host skyjia/soco-cli:latest discover
+
+# Speaker control
+docker run --rm --network host skyjia/soco-cli:latest "Living Room" play
+
+# HTTP API server
+docker run -d --network host skyjia/soco-cli:latest http-api-server -p 8000
+
+# Interactive mode
+docker run -it --rm --network host skyjia/soco-cli:latest -i
+```
+
+The entrypoint routes commands based on first argument:
+- `discover` → `sonos-discover`
+- `http-api` / `http-api-server` → `sonos-http-api-server`
+- Other arguments → `sonos`
 
 ## Security Design
 
@@ -210,19 +233,22 @@ docker buildx build --platform linux/amd64,linux/arm64 \
 
 ```bash
 # Build test
-docker build -t soco-cli:test .
+docker build -t skyjia/soco-cli:test .
 
-# CLI functionality
-docker run --rm --network host soco-cli:test --help
+# Device discovery
+docker run --rm --network host skyjia/soco-cli:test discover
+
+# Speaker info
+docker run --rm --network host skyjia/soco-cli:test "Living Room" info
 
 # Interactive mode
-docker run -it --rm --network host soco-cli:test -i
+docker run -it --rm --network host skyjia/soco-cli:test -i
 
 # HTTP API
-docker run -d --network host soco-cli:test http-api-server -p 8000
-curl http://localhost:8000/ --help
+docker run -d --network host skyjia/soco-cli:test http-api-server -p 8000
+curl http://localhost:8000/Living%20Room/info
 
 # Non-root verification
-docker run --rm --entrypoint "" soco-cli:test whoami
+docker run --rm --entrypoint "" skyjia/soco-cli:test whoami
 # Output: sonos
 ```

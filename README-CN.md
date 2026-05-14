@@ -80,20 +80,38 @@ docker-compose exec soco-cli sonos --help
 
 ## 使用示例
 
-### CLI 模式
+本镜像包含三个 CLI 工具：
+- **sonos**: 控制 Sonos 扬声器（主命令）
+- **sonos-discover**: 发现并缓存网络上的 Sonos 设备
+- **sonos-http-api-server**: 运行 HTTP API 服务器用于远程控制
+
+### 设备发现
+
+```bash
+# 发现网络上的 Sonos 设备
+docker run --rm --network host skyjia/soco-cli:latest discover
+
+# 列出所有区域/设备（使用 sonos CLI）
+docker run --rm --network host skyjia/soco-cli:latest zones
+```
+
+### 扬声器控制 (sonos CLI)
 
 ```bash
 # 显示帮助
-docker run --rm --network host skyjia/soco-cli:latest --help
+docker run --rm --network host skyjia/soco-cli:latest sonos --help
 
-# 列出所有设备
-docker run --rm --network host skyjia/soco-cli:latest list
+# 获取扬声器信息
+docker run --rm --network host skyjia/soco-cli:latest "Living Room" info
 
 # 播放音乐
 docker run --rm --network host skyjia/soco-cli:latest "Living Room" play
 
 # 设置音量
 docker run --rm --network host skyjia/soco-cli:latest "Living Room" volume 50
+
+# 列出收藏
+docker run --rm --network host skyjia/soco-cli:latest "Living Room" list_favs
 ```
 
 ### 交互模式
@@ -102,7 +120,7 @@ docker run --rm --network host skyjia/soco-cli:latest "Living Room" volume 50
 docker run -it --rm --network host skyjia/soco-cli:latest -i
 ```
 
-### HTTP API 模式
+### HTTP API 服务器
 
 ```bash
 # 启动 HTTP API 服务器（端口 8000）
