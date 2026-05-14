@@ -31,6 +31,8 @@ RUN chmod +x /entrypoint.sh && chown sonos:sonos /entrypoint.sh
 # Environment variables (can be overridden)
 ENV LOG_LEVEL=INFO
 ENV SPKR=
+ENV USE_LOCAL_CACHE=
+ENV SUBNETS=
 
 # Set non-root user
 USER sonos

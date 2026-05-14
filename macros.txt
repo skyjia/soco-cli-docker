@@ -1,9 +1,80 @@
-# SoCo-CLI Macros File
+# SoCo-CLI Macros Configuration
 # Define custom HTTP API server actions
 # See: https://github.com/avantrec/soco-cli#macros-defining-custom-http-api-server-actions
 
-# Example macros (uncomment to use):
-# morning = volume 30 : play_fav "Morning Playlist"
-# night = volume 10 : pause
+# ============================================================================
+# Basic Macros
+# ============================================================================
+# Format: macro_name = action_sequence
 
-# Empty file by default - no custom macros defined
+# Morning routine - play and set volume
+morning = volume 25 : play_favourite "Morning Playlist"
+
+# Night mode - low volume and pause
+night = volume 10 : pause
+
+# Quick volume change with feedback
+set_vol = volume %1 : wait 1 : info
+
+# ============================================================================
+# Parameterized Macros
+# ============================================================================
+# Use %1, %2, %3 for up to 3 parameters passed via URL
+
+# Play favourite with custom volume
+play_fav_vol = play_favourite %1 : volume %2
+
+# Queue album and play from position
+queue_play = queue_album %1 : play_from_queue %2
+
+# ============================================================================
+# Generic Macros (Advanced)
+# ============================================================================
+# Generic macros work with any speaker
+
+# Set volume and return status (works on any speaker)
+@set_vol_info = volume %1 : info
+
+# Play favourite and wait for start
+@play_wait = play_favourite %1 : wait_start : info
+
+# ============================================================================
+# Asynchronous Macros (Experimental)
+# ============================================================================
+# Actions that run in background, prefixed with '&'
+
+# Start playback and continue immediately
+&bg_play = play : exit 0
+
+# Set volume without waiting
+&quick_vol = volume %1
+
+# ============================================================================
+# Usage Examples (HTTP API)
+# ============================================================================
+# Access via: http://localhost:8000/<speaker>/<macro_name>/[params]
+
+# Basic macro:
+#   curl http://localhost:8000/Living%20Room/morning
+
+# Parameterized macro:
+#   curl http://localhost:8000/Living%20Room/set_vol/30
+#   curl http://localhost:8000/Living%20Room/play_fav_vol/Jazz/25
+
+# Generic macro (speaker passed automatically):
+#   curl http://localhost:8000/Living%20Room/@set_vol_info/40
+
+# ============================================================================
+# Macro Management
+# ============================================================================
+# List macros:     curl http://localhost:8000/<speaker>/list_macros
+# Reload macros:   curl http://localhost:8000/<speaker>/reload_macros
+
+# ============================================================================
+# Notes
+# ============================================================================
+# - Macros are loaded from ~/macros.txt on server startup
+# - Use ':' to separate actions in sequences
+# - Parameters %1, %2, %3 are replaced from URL path segments
+# - Generic macros (@name) receive speaker name automatically
+# - Asynchronous macros (&name) return immediately without waiting

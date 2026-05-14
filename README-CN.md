@@ -16,6 +16,8 @@
 - 交互模式：进入交互式命令行界面
 - HTTP API 模式：启动 HTTP API 服务器（默认端口 8000）
 - SPKR 环境变量支持（省略扬声器名称）
+- 缓存发现支持（USE_LOCAL_CACHE）
+- Aliases 和 Macros 自定义动作
 - 非 root 用户运行，确保安全
 - 配置目录和音乐库持久化
 
@@ -74,6 +76,8 @@ Docker Compose 默认启动 HTTP API Server（端口 8000）：
 # 设置环境变量（可选）
 export MUSIC_PATH=/path/to/your/music
 export SPKR="Living Room"
+export USE_LOCAL_CACHE=true  # 使用缓存发现
+export SUBNETS="192.168.1.0/24"  # 网络子网发现
 
 # 启动 HTTP API 服务器
 docker-compose up -d
@@ -98,6 +102,9 @@ docker-compose run --rm soco-cli "Living Room" play
 ```bash
 # 发现网络上的 Sonos 设备
 docker run --rm --network host skyjia/soco-cli:latest discover
+
+# 使用缓存发现（首次扫描后更快）
+docker run --rm --network host -e USE_LOCAL_CACHE=true skyjia/soco-cli:latest play
 ```
 
 ### 扬声器控制 (sonos CLI)
@@ -105,6 +112,9 @@ docker run --rm --network host skyjia/soco-cli:latest discover
 ```bash
 # 显示 sonos CLI 帮助
 docker run --rm --network host skyjia/soco-cli:latest -- --help
+
+# 显示可用动作
+docker run --rm --network host skyjia/soco-cli:latest -- --actions
 
 # 获取扬声器信息
 docker run --rm --network host skyjia/soco-cli:latest "Living Room" info
@@ -118,8 +128,11 @@ docker run --rm --network host skyjia/soco-cli:latest "Living Room" volume 50
 # 列出收藏
 docker run --rm --network host skyjia/soco-cli:latest "Living Room" list_favs
 
-# 列出所有区域（需要扬声器名称）
-docker run --rm --network host skyjia/soco-cli:latest "Living Room" zones
+# 播放收藏
+docker run --rm --network host skyjia/soco-cli:latest "Living Room" play_favourite "My Playlist"
+
+# 使用 ':' 链接多个命令
+docker run --rm --network host skyjia/soco-cli:latest "Living Room" volume 30 : play : wait_start
 ```
 
 ### 使用 SPKR 环境变量
@@ -130,6 +143,14 @@ docker run --rm --network host skyjia/soco-cli:latest "Living Room" zones
 # 通过环境变量设置默认扬声器
 docker run --rm --network host -e SPKR="Living Room" skyjia/soco-cli:latest play
 docker run --rm --network host -e SPKR="Living Room" skyjia/soco-cli:latest volume 50
+docker run --rm --network host -e SPKR="Living Room" skyjia/soco-cli:latest list_favs
+```
+
+### 使用 LOG_LEVEL 调试
+
+```bash
+# 启用调试日志
+docker run --rm --network host -e LOG_LEVEL=DEBUG skyjia/soco-cli:latest "Living Room" play
 ```
 
 ### 交互模式
@@ -138,11 +159,21 @@ docker run --rm --network host -e SPKR="Living Room" skyjia/soco-cli:latest volu
 docker run -it --rm --network host skyjia/soco-cli:latest -i
 ```
 
+交互模式功能：
+- 命令历史
+- 自动补全（Linux/macOS）
+- Shell aliases（自定义快捷方式）
+- 单键模式（`sk` 命令）
+- Push/pop 扬声器上下文
+
 ### HTTP API 服务器
 
 ```bash
 # 启动 HTTP API 服务器（端口 8000）
 docker run -d --network host skyjia/soco-cli:latest http-api-server -p 8000
+
+# 使用指定子网启动
+docker run -d --network host -e SUBNETS="192.168.1.0/24" skyjia/soco-cli:latest http-api-server -p 8000
 
 # 测试 API（设置 SPKR 后，省略扬声器名称）
 curl http://localhost:8000/play
@@ -151,7 +182,32 @@ curl http://localhost:8000/volume/50
 # 测试 API（指定扬声器名称）
 curl http://localhost:8000/Living%20Room/play
 curl http://localhost:8000/Living%20Room/volume/50
+curl http://localhost:8000/Living%20Room/info
+
+# 自定义 macros
+curl http://localhost:8000/Living%20Room/morning
+curl http://localhost:8000/Living%20Room/set_vol/30
 ```
+
+### 本地文件播放
+
+将音乐库挂载到 `/music` 以播放本地文件：
+
+```bash
+# 挂载音乐库
+docker run --rm --network host -v /path/to/music:/music:ro skyjia/soco-cli:latest "Living Room" play_file "/music/song.mp3"
+
+# 播放 M3U 播放列表
+docker run --rm --network host -v /path/to/music:/music:ro skyjia/soco-cli:latest "Living Room" play_m3u "/music/playlist.m3u"
+
+# 播放目录中所有文件
+docker run --rm --network host -v /path/to/music:/music:ro skyjia/soco-cli:latest "Living Room" play_directory "/music/album"
+
+# 选项：p（打印）、s（随机）、r（随机曲目）、i（交互）
+docker run --rm --network host -v /path/to/music:/music:ro skyjia/soco-cli:latest "Living Room" play_directory "/music/album" s
+```
+
+支持格式：MP3, M4A, MP4, FLAC, OGG, WMA, WAV, AIFF
 
 ## 环境变量
 
@@ -159,32 +215,79 @@ curl http://localhost:8000/Living%20Room/volume/50
 |------|------|--------|
 | `LOG_LEVEL` | 日志级别 (NONE, CRITICAL, ERROR, WARN, INFO, DEBUG) | INFO |
 | `SPKR` | 默认扬声器名称（允许省略命令中的扬声器） | (空) |
+| `USE_LOCAL_CACHE` | 设为 `true` 使用缓存扬声器列表（更快发现） | (空) |
+| `SUBNETS` | HTTP API 服务器的网络子网（如 `192.168.1.0/24`） | (空) |
 
 ## 挂载点
 
 | 路径 | 说明 |
 |------|------|
-| `/config` | 配置目录，存储 soco-cli 设置和别名 |
+| `/config` | 配置目录，存储 soco-cli 设置、别名和扬声器缓存 |
 | `/music` | 本地音乐库路径（只读访问） |
 | `/macros` | HTTP API 服务器的自定义 macros 文件 |
 
+## 配置文件
+
+### Aliases (`~/.soco-cli/aliases.json`)
+
+定义命令自定义快捷方式：
+
+```json
+{
+  "aliases": {
+    "p": "play",
+    "v": "volume %1",
+    "fav": "play_favourite %1"
+  },
+  "sequences": {
+    "start": "play : volume 30",
+    "morning": "volume 25 : play_favourite \"Morning Jazz\""
+  }
+}
+```
+
+详见 `config/.soco-cli/aliases.json` 和 `aliases.example.md`。
+
+### Macros (`~/macros.txt`)
+
+定义 HTTP API 服务器自定义动作：
+
+```bash
+# 基本 macro
+morning = volume 25 : play_favourite "Morning Playlist"
+
+# 参数化 macro
+set_vol = volume %1 : info
+
+# 用法：curl http://localhost:8000/Living%20Room/set_vol/30
+```
+
+详见 `macros.txt`。
+
 ## 网络配置
 
-使用 `network_mode: host` 以便发现局域网内的 Sonos 设备。这是最简单的配置方式，无需额外网络设置。
+使用 `network_mode: host` 以便发现局域网内的 Sonos 设备。
+
+### 防火墙端口
+
+| 端口 | 协议 | 说明 |
+|------|------|------|
+| UDP 1900 | SSDP multicast | 设备发现（239.255.255.250） |
+| TCP 1400-1499 | Sonos events | 事件通知 |
+| TCP 54000-54099 | HTTP server | 内置 HTTP 服务器 |
+| TCP 8000 | HTTP API | API 服务器（可配置） |
+| UDP 32768-60999 | Ephemeral | SSDP 响应端口（Linux） |
+
+```bash
+# 示例：在 Linux 上开放端口（ufw）
+sudo ufw allow 32768:60999/udp
+sudo ufw allow 1400:1499/tcp
+sudo ufw allow 8000/tcp
+```
 
 ### SSDP 发现机制
 
-soco-cli 使用 SSDP multicast 进行设备发现：
-- **Multicast 地址**: 239.255.255.250
-- **UDP 端口**: 1900
-- **传出端口**: 可变（ephemeral 端口范围，Linux 上为 32768–60999）
-
-如果防火墙阻止 ephemeral 端口范围的传入 UDP 流量，标准发现将失败并回退到较慢的网络扫描发现。为确保快速发现：
-
-```bash
-# 示例：在 Linux 上开放 ephemeral UDP 端口（ufw）
-sudo ufw allow 32768:60999/udp
-```
+soco-cli 使用 SSDP multicast 进行设备发现。如果防火墙阻止 ephemeral 端口范围的传入 UDP 流量，发现将回退到较慢的网络扫描。首次发现后使用 `USE_LOCAL_CACHE=true` 可加速操作。
 
 ## 常见问题
 
@@ -192,8 +295,8 @@ sudo ufw allow 32768:60999/udp
 
 1. 确保容器使用 `--network host` 模式
 2. 验证宿主机与 Sonos 设备在同一局域网
-3. 检查防火墙设置 - 允许 ephemeral 端口范围的传入 UDP 流量（如 32768–60999）
-4. 如果发现速度慢，可使用 `-l` 参数启用缓存发现
+3. 检查防火墙设置（见上方防火墙端口）
+4. 使用缓存发现：`-e USE_LOCAL_CACHE=true`
 
 ### 配置不保存
 
@@ -201,7 +304,11 @@ sudo ufw allow 32768:60999/udp
 
 ### HTTP API 无法访问
 
-确认端口未被占用，并且防火墙允许访问。
+确认端口未被占用，防火墙允许访问（TCP 8000）。
+
+### 本地文件无法播放
+
+确保音乐库正确挂载到 `/music` 并路径正确。
 
 ## 相关链接
 

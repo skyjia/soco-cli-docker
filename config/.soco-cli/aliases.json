@@ -2,14 +2,31 @@
   "aliases": {
     "p": "play",
     "s": "pause",
-    "v": "volume",
+    "pp": "pauseplay",
+    "v": "volume %1",
     "n": "next",
     "b": "previous",
-    "l": "list",
-    "i": "info"
+    "i": "info",
+    "st": "state",
+    "q": "list_queue",
+    "fav": "play_favourite %1"
   },
   "sequences": {
-    "start": "play:volume 30",
-    "stop": "pause:volume 0"
+    "start": "play : volume 30",
+    "stop": "pause : volume 0",
+    "morning": "volume 25 : play_favourite \"Morning Jazz\" : wait_start",
+    "night": "volume 10 : play_favourite \"Sleep Playlist\"",
+    "vol": "volume %1 : wait 2 : info"
+  },
+  "_comment": {
+    "usage": "Aliases can use %1, %2 etc for parameters. Sequences use ':' separator.",
+    "examples": [
+      "v 50     -> volume 50",
+      "fav Jazz -> play_favourite Jazz",
+      "start    -> play : volume 30",
+      "vol 40   -> volume 40 : wait 2 : info"
+    ],
+    "interactive": "In interactive mode, type 'alias' to see all aliases",
+    "push_pop": "Use 'push' to save current speaker, 'pop' to restore"
   }
 }

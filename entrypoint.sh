@@ -1,9 +1,17 @@
 #!/bin/bash
 set -e
 
-# Handle LOG_LEVEL environment variable
+# Build base command with optional flags
+SONOS_OPTS=""
+
+# Handle LOG_LEVEL environment variable - maps to --log parameter
 if [ -n "$LOG_LEVEL" ]; then
-    export SOCO_LOG_ARGS="--log $LOG_LEVEL"
+    SONOS_OPTS="--log $LOG_LEVEL"
+fi
+
+# Handle USE_LOCAL_CACHE environment variable - maps to -l flag
+if [ "$USE_LOCAL_CACHE" = "TRUE" ] || [ "$USE_LOCAL_CACHE" = "true" ]; then
+    SONOS_OPTS="$SONOS_OPTS -l"
 fi
 
 # Handle SPKR environment variable (default speaker)
@@ -38,13 +46,28 @@ case "$CMD" in
         ;;
     http-api|http-api-server|api-server)
         # Run sonos-http-api-server for HTTP API mode
+        # Pass LOG_LEVEL via --log if set
         shift
-        exec sonos-http-api-server "$@"
+        HTTP_OPTS=""
+        if [ -n "$LOG_LEVEL" ]; then
+            HTTP_OPTS="--log $LOG_LEVEL"
+        fi
+        if [ "$USE_LOCAL_CACHE" = "TRUE" ] || [ "$USE_LOCAL_CACHE" = "true" ]; then
+            HTTP_OPTS="$HTTP_OPTS -l"
+        fi
+        if [ -n "$SUBNETS" ]; then
+            HTTP_OPTS="$HTTP_OPTS --subnets $SUBNETS"
+        fi
+        exec sonos-http-api-server $HTTP_OPTS "$@"
         ;;
     --)
         # Pass remaining args directly to sonos (bypass routing)
         shift
-        exec sonos "$@"
+        if [ -n "$SONOS_OPTS" ]; then
+            exec sonos $SONOS_OPTS "$@"
+        else
+            exec sonos "$@"
+        fi
         ;;
     --help|-h)
         # Show combined help
@@ -53,37 +76,51 @@ case "$CMD" in
         echo "Usage: docker run --rm --network host skyjia/soco-cli:latest <command> [args]"
         echo ""
         echo "Environment Variables:"
-        echo "  SPKR        Default speaker name (e.g., 'Living Room')"
-        echo "  LOG_LEVEL   Log level (NONE, CRITICAL, ERROR, WARN, INFO, DEBUG)"
+        echo "  SPKR             Default speaker name (e.g., 'Living Room')"
+        echo "  LOG_LEVEL         Log level (NONE, CRITICAL, ERROR, WARN, INFO, DEBUG)"
+        echo "  USE_LOCAL_CACHE  Set to TRUE to use cached speaker list"
+        echo "  SUBNETS           Network subnets for HTTP API server (e.g., '192.168.1.0/24')"
         echo ""
         echo "Commands:"
-        echo "  discover [options]     Discover Sonos devices on network"
-        echo "  http-api-server [opts] Start HTTP API server (default port 8000)"
-        echo "  <speaker> <action>     Control Sonos speaker (sonos CLI)"
-        echo "  -i                     Interactive mode"
+        echo "  discover [options]       Discover Sonos devices on network"
+        echo "  http-api-server [opts]   Start HTTP API server (default port 8000)"
+        echo "  <speaker> <action>       Control Sonos speaker (sonos CLI)"
+        echo "  -i                       Interactive mode"
+        echo "  -- <args>                Pass args directly to sonos CLI"
         echo ""
         echo "Examples:"
         echo "  # Discover devices"
         echo "  docker run --rm --network host skyjia/soco-cli:latest discover"
         echo ""
-        echo "  # HTTP API server"
-        echo "  docker run -d --network host skyjia/soco-cli:latest http-api-server -p 8000"
+        echo "  # HTTP API server with subnet"
+        echo "  docker run -d --network host -e SUBNETS='192.168.1.0/24' skyjia/soco-cli:latest http-api-server -p 8000"
         echo ""
-        echo "  # Speaker control"
-        echo "  docker run --rm --network host skyjia/soco-cli:latest \"Living Room\" play"
+        echo "  # Speaker control with logging"
+        echo "  docker run --rm --network host -e LOG_LEVEL=DEBUG skyjia/soco-cli:latest \"Living Room\" play"
         echo ""
         echo "  # Using SPKR environment variable"
         echo "  docker run --rm --network host -e SPKR=\"Living Room\" skyjia/soco-cli:latest play"
+        echo ""
+        echo "  # Using cached discovery"
+        echo "  docker run --rm --network host -e USE_LOCAL_CACHE=TRUE skyjia/soco-cli:latest play"
         echo ""
         echo "For full sonos CLI help, run: docker run --rm --network host skyjia/soco-cli:latest -- --help"
         exit 0
         ;;
     "")
         # No arguments - show sonos help
-        exec sonos --help
+        if [ -n "$SONOS_OPTS" ]; then
+            exec sonos $SONOS_OPTS --help
+        else
+            exec sonos --help
+        fi
         ;;
     *)
         # Default to sonos CLI for speaker control
-        exec sonos "$@"
+        if [ -n "$SONOS_OPTS" ]; then
+            exec sonos $SONOS_OPTS "$@"
+        else
+            exec sonos "$@"
+        fi
         ;;
 esac

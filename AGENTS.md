@@ -13,8 +13,13 @@ Key features:
 - Three CLI tools: sonos, sonos-discover, sonos-http-api-server
 - Smart entrypoint routing based on command argument
 - SPKR environment variable support (omit speaker name)
+- USE_LOCAL_CACHE support (cached discovery)
+- LOG_LEVEL mapping to --log parameter
+- SUBNETS support for HTTP API server network discovery
 - Interactive Shell Mode for device management
 - HTTP API Server mode (default port 8000, configurable via CLI)
+- Aliases and Macros support for custom actions
+- Local file playback (play_file, play_m3u, play_directory)
 - Macros file support for custom HTTP API actions
 - Config directory and local music library volume mounts
 - Sample config file initialization
@@ -30,9 +35,11 @@ Key features:
 | HTTP API port | 8000 (configurable via CLI) |
 | Network mode | `host` (required for SSDP multicast) |
 | SSDP multicast | 239.255.255.250:1900 (UDP) |
-| Environment variables | `LOG_LEVEL`, `SPKR` |
+| Environment variables | `LOG_LEVEL`, `SPKR`, `USE_LOCAL_CACHE`, `SUBNETS` |
 | Mount points | `/config`, `/music`, `/macros` |
+| Config files | `aliases.json`, `macros.txt`, `speaker_cache` |
 | Image tags | `latest`, `vX.Y.Z` (multi-arch), `amd64`, `arm64` (single-arch) |
+| Firewall ports | UDP 1900, TCP 1400-1499, TCP 54000-54099, TCP 8000 |
 | Update policy | Regular updates for latest soco-cli and security patches |
 | License | MIT |
 

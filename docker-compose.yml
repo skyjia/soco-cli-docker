@@ -5,19 +5,21 @@ services:
     image: skyjia/soco-cli:latest
     container_name: soco-cli-api
     environment:
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
       # Default speaker (optional, allows omitting speaker name in commands)
       - SPKR=${SPKR:-}
+      # Use cached speaker list for faster discovery
+      - USE_LOCAL_CACHE=${USE_LOCAL_CACHE:-}
+      # Network subnets for HTTP API server discovery (optional)
+      - SUBNETS=${SUBNETS:-}
     volumes:
-      # Config directory - persists settings and aliases
+      # Config directory - persists settings, aliases, and speaker cache
       - ./config:/config
-      # Local music library - read-only access
+      # Local music library - read-only access for play_file, play_m3u, play_directory
       - ${MUSIC_PATH:-/path/to/your/music}:/music:ro
-      # Macros file for HTTP API server (optional)
+      # Macros file for HTTP API server custom actions
       - ${MACROS_PATH:-./macros.txt}:/home/sonos/macros.txt:ro
     # Host network mode required for SSDP multicast discovery
-    # SSDP uses UDP multicast (239.255.255.250:1900)
-    # Ensure firewall allows incoming UDP on ephemeral port range (e.g., 32768-60999)
     network_mode: host
     restart: unless-stopped
     # Default: Start HTTP API server on port 8000
@@ -28,8 +30,9 @@ services:
     image: skyjia/soco-cli:latest
     container_name: soco-cli
     environment:
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - SPKR=${SPKR:-}
+      - USE_LOCAL_CACHE=${USE_LOCAL_CACHE:-}
     volumes:
       - ./config:/config
       - ${MUSIC_PATH:-/path/to/your/music}:/music:ro

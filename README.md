@@ -16,6 +16,8 @@ Docker image for [soco-cli](https://github.com/avantrec/soco-cli), providing a c
 - Interactive mode: enter interactive command-line interface
 - HTTP API mode: start HTTP API server (default port 8000)
 - SPKR environment variable support (omit speaker name)
+- Cached discovery support (USE_LOCAL_CACHE)
+- Aliases and Macros for custom actions
 - Non-root user execution for security
 - Persistent config directory and music library
 
@@ -74,6 +76,8 @@ Docker Compose starts HTTP API Server by default (port 8000):
 # Set environment variables (optional)
 export MUSIC_PATH=/path/to/your/music
 export SPKR="Living Room"
+export USE_LOCAL_CACHE=true  # Use cached discovery
+export SUBNETS="192.168.1.0/24"  # Network subnet for discovery
 
 # Start HTTP API server
 docker-compose up -d
@@ -98,6 +102,9 @@ This image includes three CLI tools:
 ```bash
 # Discover Sonos devices on network
 docker run --rm --network host skyjia/soco-cli:latest discover
+
+# Use cached discovery (faster after initial scan)
+docker run --rm --network host -e USE_LOCAL_CACHE=true skyjia/soco-cli:latest play
 ```
 
 ### Speaker Control (sonos CLI)
@@ -105,6 +112,9 @@ docker run --rm --network host skyjia/soco-cli:latest discover
 ```bash
 # Show sonos CLI help
 docker run --rm --network host skyjia/soco-cli:latest -- --help
+
+# Show available actions
+docker run --rm --network host skyjia/soco-cli:latest -- --actions
 
 # Get speaker info
 docker run --rm --network host skyjia/soco-cli:latest "Living Room" info
@@ -118,8 +128,11 @@ docker run --rm --network host skyjia/soco-cli:latest "Living Room" volume 50
 # List favorites
 docker run --rm --network host skyjia/soco-cli:latest "Living Room" list_favs
 
-# List all zones (requires speaker name)
-docker run --rm --network host skyjia/soco-cli:latest "Living Room" zones
+# Play favorite
+docker run --rm --network host skyjia/soco-cli:latest "Living Room" play_favourite "My Playlist"
+
+# Command chaining with ':'
+docker run --rm --network host skyjia/soco-cli:latest "Living Room" volume 30 : play : wait_start
 ```
 
 ### Using SPKR Environment Variable
@@ -130,6 +143,14 @@ Set `SPKR` to omit speaker name in commands:
 # Set default speaker via environment variable
 docker run --rm --network host -e SPKR="Living Room" skyjia/soco-cli:latest play
 docker run --rm --network host -e SPKR="Living Room" skyjia/soco-cli:latest volume 50
+docker run --rm --network host -e SPKR="Living Room" skyjia/soco-cli:latest list_favs
+```
+
+### Using LOG_LEVEL for Debugging
+
+```bash
+# Enable debug logging
+docker run --rm --network host -e LOG_LEVEL=DEBUG skyjia/soco-cli:latest "Living Room" play
 ```
 
 ### Interactive Mode
@@ -138,11 +159,21 @@ docker run --rm --network host -e SPKR="Living Room" skyjia/soco-cli:latest volu
 docker run -it --rm --network host skyjia/soco-cli:latest -i
 ```
 
+Interactive mode features:
+- Command history
+- Auto-completion (Linux/macOS)
+- Shell aliases (custom shortcuts)
+- Single keystroke mode (`sk` command)
+- Push/pop speaker context
+
 ### HTTP API Server
 
 ```bash
 # Start HTTP API server (port 8000)
 docker run -d --network host skyjia/soco-cli:latest http-api-server -p 8000
+
+# Start with specific subnet
+docker run -d --network host -e SUBNETS="192.168.1.0/24" skyjia/soco-cli:latest http-api-server -p 8000
 
 # Test API (with SPKR set, omit speaker name)
 curl http://localhost:8000/play
@@ -151,7 +182,32 @@ curl http://localhost:8000/volume/50
 # Test API (specify speaker name)
 curl http://localhost:8000/Living%20Room/play
 curl http://localhost:8000/Living%20Room/volume/50
+curl http://localhost:8000/Living%20Room/info
+
+# Custom macros
+curl http://localhost:8000/Living%20Room/morning
+curl http://localhost:8000/Living%20Room/set_vol/30
 ```
+
+### Local File Playback
+
+Mount your music library to `/music` for local file playback:
+
+```bash
+# Mount music library
+docker run --rm --network host -v /path/to/music:/music:ro skyjia/soco-cli:latest "Living Room" play_file "/music/song.mp3"
+
+# Play M3U playlist
+docker run --rm --network host -v /path/to/music:/music:ro skyjia/soco-cli:latest "Living Room" play_m3u "/music/playlist.m3u"
+
+# Play all files in directory
+docker run --rm --network host -v /path/to/music:/music:ro skyjia/soco-cli:latest "Living Room" play_directory "/music/album"
+
+# Options: p (print), s (shuffle), r (random), i (interactive)
+docker run --rm --network host -v /path/to/music:/music:ro skyjia/soco-cli:latest "Living Room" play_directory "/music/album" s
+```
+
+Supported formats: MP3, M4A, MP4, FLAC, OGG, WMA, WAV, AIFF
 
 ## Environment Variables
 
@@ -159,32 +215,79 @@ curl http://localhost:8000/Living%20Room/volume/50
 |----------|-------------|---------|
 | `LOG_LEVEL` | Log level (NONE, CRITICAL, ERROR, WARN, INFO, DEBUG) | INFO |
 | `SPKR` | Default speaker name (allows omitting speaker in commands) | (empty) |
+| `USE_LOCAL_CACHE` | Set to `true` to use cached speaker list (faster discovery) | (empty) |
+| `SUBNETS` | Network subnets for HTTP API server discovery (e.g., `192.168.1.0/24`) | (empty) |
 
 ## Mount Points
 
 | Path | Description |
 |------|-------------|
-| `/config` | Config directory, stores soco-cli settings and aliases |
+| `/config` | Config directory, stores soco-cli settings, aliases, and speaker cache |
 | `/music` | Local music library path (read-only access) |
 | `/macros` | Macros file for HTTP API server custom actions |
 
+## Configuration Files
+
+### Aliases (`~/.soco-cli/aliases.json`)
+
+Define custom shortcuts for commands:
+
+```json
+{
+  "aliases": {
+    "p": "play",
+    "v": "volume %1",
+    "fav": "play_favourite %1"
+  },
+  "sequences": {
+    "start": "play : volume 30",
+    "morning": "volume 25 : play_favourite \"Morning Jazz\""
+  }
+}
+```
+
+See `config/.soco-cli/aliases.json` and `aliases.example.md` for details.
+
+### Macros (`~/macros.txt`)
+
+Define custom HTTP API server actions:
+
+```bash
+# Basic macro
+morning = volume 25 : play_favourite "Morning Playlist"
+
+# Parameterized macro
+set_vol = volume %1 : info
+
+# Usage: curl http://localhost:8000/Living%20Room/set_vol/30
+```
+
+See `macros.txt` for detailed examples.
+
 ## Network Configuration
 
-Uses `network_mode: host` for discovering Sonos devices in the local network. This is the simplest configuration with no additional network setup required.
+Uses `network_mode: host` for discovering Sonos devices in the local network.
+
+### Firewall Ports
+
+| Port | Protocol | Description |
+|------|----------|-------------|
+| UDP 1900 | SSDP multicast | Device discovery (239.255.255.250) |
+| TCP 1400-1499 | Sonos events | Event notifications |
+| TCP 54000-54099 | HTTP server | Built-in HTTP server |
+| TCP 8000 | HTTP API | API server (configurable) |
+| UDP 32768-60999 | Ephemeral | SSDP response ports (Linux) |
+
+```bash
+# Example: Open ports on Linux (ufw)
+sudo ufw allow 32768:60999/udp
+sudo ufw allow 1400:1499/tcp
+sudo ufw allow 8000/tcp
+```
 
 ### SSDP Discovery Mechanism
 
-soco-cli uses SSDP multicast for device discovery:
-- **Multicast address**: 239.255.255.250
-- **UDP port**: 1900
-- **Outgoing port**: Variable (ephemeral port range, e.g., 32768–60999 on Linux)
-
-If the firewall blocks incoming UDP traffic on the ephemeral port range, standard discovery will fail and fall back to slower network scan discovery. To ensure fast discovery:
-
-```bash
-# Example: Open ephemeral UDP ports on Linux (ufw)
-sudo ufw allow 32768:60999/udp
-```
+soco-cli uses SSDP multicast for device discovery. If the firewall blocks incoming UDP traffic on the ephemeral port range, discovery falls back to slower network scan. Use `USE_LOCAL_CACHE=true` after initial discovery for faster operations.
 
 ## FAQ
 
@@ -192,8 +295,8 @@ sudo ufw allow 32768:60999/udp
 
 1. Ensure the container uses `--network host` mode
 2. Verify the host machine is on the same LAN as Sonos devices
-3. Check firewall settings - allow incoming UDP traffic on ephemeral ports (e.g., 32768–60999)
-4. If discovery is slow, consider using cached discovery with `-l` flag
+3. Check firewall settings (see Firewall Ports above)
+4. Use cached discovery: `-e USE_LOCAL_CACHE=true`
 
 ### Configuration not saved
 
@@ -201,7 +304,11 @@ Check if `/config` directory is correctly mounted with write permissions.
 
 ### HTTP API inaccessible
 
-Verify the port is not occupied and firewall allows access.
+Verify the port is not occupied and firewall allows access (TCP 8000).
+
+### Local files not playing
+
+Ensure music library is mounted to `/music` with correct path.
 
 ## Related Links
 
