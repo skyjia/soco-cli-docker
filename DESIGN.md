@@ -151,8 +151,11 @@ The image includes three CLI tools with smart routing via `entrypoint.sh`:
 # Device discovery
 docker run --rm --network host skyjia/soco-cli:latest discover
 
-# Speaker control
+# Speaker control (with speaker name)
 docker run --rm --network host skyjia/soco-cli:latest "Living Room" play
+
+# Speaker control (using SPKR env var)
+docker run --rm --network host -e SPKR="Living Room" skyjia/soco-cli:latest play
 
 # HTTP API server
 docker run -d --network host skyjia/soco-cli:latest http-api-server -p 8000
@@ -165,6 +168,17 @@ The entrypoint routes commands based on first argument:
 - `discover` → `sonos-discover`
 - `http-api` / `http-api-server` → `sonos-http-api-server`
 - Other arguments → `sonos`
+
+### Environment Variables
+
+| Variable | Description | Usage |
+|----------|-------------|-------|
+| `SPKR` | Default speaker name | Allows omitting speaker in sonos commands |
+| `LOG_LEVEL` | Log level | NONE, CRITICAL, ERROR, WARN, INFO, DEBUG |
+
+### Macros File
+
+HTTP API server loads macros from `${HOME}/macros.txt` on startup. Default empty file prevents warnings. Mount custom macros file via `/macros` or `/home/sonos/macros.txt`.
 
 ## Security Design
 

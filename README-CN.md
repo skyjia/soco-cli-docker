@@ -15,6 +15,7 @@
 - CLI 模式：直接执行 Sonos 控制命令
 - 交互模式：进入交互式命令行界面
 - HTTP API 模式：启动 HTTP API 服务器（默认端口 8000）
+- SPKR 环境变量支持（省略扬声器名称）
 - 非 root 用户运行，确保安全
 - 配置目录和音乐库持久化
 
@@ -67,15 +68,22 @@ docker build -t skyjia/soco-cli:latest .
 
 ### 使用 Docker Compose
 
-```bash
-# 设置音乐库路径
-export MUSIC_PATH=/path/to/your/music
+Docker Compose 默认启动 HTTP API Server（端口 8000）：
 
-# 启动容器
+```bash
+# 设置环境变量（可选）
+export MUSIC_PATH=/path/to/your/music
+export SPKR="Living Room"
+
+# 启动 HTTP API 服务器
 docker-compose up -d
 
-# 执行命令
-docker-compose exec soco-cli sonos --help
+# 测试 API
+curl http://localhost:8000/play
+
+# 运行 CLI 命令（使用单独 profile）
+docker-compose run --rm soco-cli discover
+docker-compose run --rm soco-cli "Living Room" play
 ```
 
 ## 使用示例
@@ -90,16 +98,13 @@ docker-compose exec soco-cli sonos --help
 ```bash
 # 发现网络上的 Sonos 设备
 docker run --rm --network host skyjia/soco-cli:latest discover
-
-# 列出所有区域/设备（使用 sonos CLI）
-docker run --rm --network host skyjia/soco-cli:latest zones
 ```
 
 ### 扬声器控制 (sonos CLI)
 
 ```bash
 # 显示帮助
-docker run --rm --network host skyjia/soco-cli:latest sonos --help
+docker run --rm --network host skyjia/soco-cli:latest -- --help
 
 # 获取扬声器信息
 docker run --rm --network host skyjia/soco-cli:latest "Living Room" info
@@ -112,6 +117,19 @@ docker run --rm --network host skyjia/soco-cli:latest "Living Room" volume 50
 
 # 列出收藏
 docker run --rm --network host skyjia/soco-cli:latest "Living Room" list_favs
+
+# 列出所有区域（需要扬声器名称）
+docker run --rm --network host skyjia/soco-cli:latest "Living Room" zones
+```
+
+### 使用 SPKR 环境变量
+
+设置 `SPKR` 可省略命令中的扬声器名称：
+
+```bash
+# 通过环境变量设置默认扬声器
+docker run --rm --network host -e SPKR="Living Room" skyjia/soco-cli:latest play
+docker run --rm --network host -e SPKR="Living Room" skyjia/soco-cli:latest volume 50
 ```
 
 ### 交互模式
@@ -126,7 +144,11 @@ docker run -it --rm --network host skyjia/soco-cli:latest -i
 # 启动 HTTP API 服务器（端口 8000）
 docker run -d --network host skyjia/soco-cli:latest http-api-server -p 8000
 
-# 测试 API
+# 测试 API（设置 SPKR 后，省略扬声器名称）
+curl http://localhost:8000/play
+curl http://localhost:8000/volume/50
+
+# 测试 API（指定扬声器名称）
 curl http://localhost:8000/Living%20Room/play
 curl http://localhost:8000/Living%20Room/volume/50
 ```
@@ -136,6 +158,7 @@ curl http://localhost:8000/Living%20Room/volume/50
 | 变量 | 说明 | 默认值 |
 |------|------|--------|
 | `LOG_LEVEL` | 日志级别 (NONE, CRITICAL, ERROR, WARN, INFO, DEBUG) | INFO |
+| `SPKR` | 默认扬声器名称（允许省略命令中的扬声器） | (空) |
 
 ## 挂载点
 
@@ -143,6 +166,7 @@ curl http://localhost:8000/Living%20Room/volume/50
 |------|------|
 | `/config` | 配置目录，存储 soco-cli 设置和别名 |
 | `/music` | 本地音乐库路径（只读访问） |
+| `/macros` | HTTP API 服务器的自定义 macros 文件 |
 
 ## 网络配置
 

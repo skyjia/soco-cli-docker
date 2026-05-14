@@ -1,21 +1,43 @@
 version: '3.8'
 
 services:
-  soco-cli:
+  soco-cli-api:
     image: skyjia/soco-cli:latest
-    container_name: soco-cli
+    container_name: soco-cli-api
     environment:
       - LOG_LEVEL=INFO
+      # Default speaker (optional, allows omitting speaker name in commands)
+      - SPKR=${SPKR:-}
     volumes:
       # Config directory - persists settings and aliases
       - ./config:/config
       # Local music library - read-only access
-      # Replace with your actual music library path
       - ${MUSIC_PATH:-/path/to/your/music}:/music:ro
+      # Macros file for HTTP API server (optional)
+      - ${MACROS_PATH:-./macros.txt}:/home/sonos/macros.txt:ro
     # Host network mode required for SSDP multicast discovery
     # SSDP uses UDP multicast (239.255.255.250:1900)
     # Ensure firewall allows incoming UDP on ephemeral port range (e.g., 32768-60999)
     network_mode: host
     restart: unless-stopped
+    # Default: Start HTTP API server on port 8000
+    command: ["http-api-server", "-p", "8000"]
+
+  # Optional: CLI-only container for one-off commands
+  soco-cli:
+    image: skyjia/soco-cli:latest
+    container_name: soco-cli
+    environment:
+      - LOG_LEVEL=INFO
+      - SPKR=${SPKR:-}
+    volumes:
+      - ./config:/config
+      - ${MUSIC_PATH:-/path/to/your/music}:/music:ro
+    network_mode: host
+    # This service doesn't auto-start; use for ad-hoc commands
+    # Example: docker-compose run soco-cli discover
+    # Example: docker-compose run soco-cli "Living Room" play
     stdin_open: true
     tty: true
+    profiles:
+      - cli

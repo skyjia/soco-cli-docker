@@ -12,8 +12,10 @@ Key features:
 - Pre-installed soco-cli (latest version at build time)
 - Three CLI tools: sonos, sonos-discover, sonos-http-api-server
 - Smart entrypoint routing based on command argument
+- SPKR environment variable support (omit speaker name)
 - Interactive Shell Mode for device management
 - HTTP API Server mode (default port 8000, configurable via CLI)
+- Macros file support for custom HTTP API actions
 - Config directory and local music library volume mounts
 - Sample config file initialization
 - Non-root user execution
@@ -28,7 +30,8 @@ Key features:
 | HTTP API port | 8000 (configurable via CLI) |
 | Network mode | `host` (required for SSDP multicast) |
 | SSDP multicast | 239.255.255.250:1900 (UDP) |
-| Environment variables | `LOG_LEVEL` |
+| Environment variables | `LOG_LEVEL`, `SPKR` |
+| Mount points | `/config`, `/music`, `/macros` |
 | Image tags | `latest`, `vX.Y.Z` (multi-arch), `amd64`, `arm64` (single-arch) |
 | Update policy | Regular updates for latest soco-cli and security patches |
 | License | MIT |
@@ -38,8 +41,9 @@ Key features:
 | File | Purpose |
 |------|---------|
 | `Dockerfile` | Multi-stage build definition |
-| `entrypoint.sh` | Container entrypoint script |
-| `docker-compose.yml` | Docker Compose example |
+| `entrypoint.sh` | Container entrypoint script with smart routing |
+| `docker-compose.yml` | Docker Compose (HTTP API server by default) |
+| `macros.txt` | Default macros file for HTTP API server |
 | `README.md` | English user documentation |
 | `README-CN.md` | Chinese user documentation |
 | `DESIGN.md` | Architecture and design details |

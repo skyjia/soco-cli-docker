@@ -15,6 +15,7 @@ Docker image for [soco-cli](https://github.com/avantrec/soco-cli), providing a c
 - CLI mode: execute Sonos control commands directly
 - Interactive mode: enter interactive command-line interface
 - HTTP API mode: start HTTP API server (default port 8000)
+- SPKR environment variable support (omit speaker name)
 - Non-root user execution for security
 - Persistent config directory and music library
 
@@ -67,15 +68,22 @@ docker build -t skyjia/soco-cli:latest .
 
 ### Using Docker Compose
 
-```bash
-# Set music library path
-export MUSIC_PATH=/path/to/your/music
+Docker Compose starts HTTP API Server by default (port 8000):
 
-# Start container
+```bash
+# Set environment variables (optional)
+export MUSIC_PATH=/path/to/your/music
+export SPKR="Living Room"
+
+# Start HTTP API server
 docker-compose up -d
 
-# Execute commands
-docker-compose exec soco-cli sonos --help
+# Test API
+curl http://localhost:8000/play
+
+# Run CLI commands (using separate profile)
+docker-compose run --rm soco-cli discover
+docker-compose run --rm soco-cli "Living Room" play
 ```
 
 ## Usage Examples
@@ -90,16 +98,13 @@ This image includes three CLI tools:
 ```bash
 # Discover Sonos devices on network
 docker run --rm --network host skyjia/soco-cli:latest discover
-
-# List all zones/devices (using sonos CLI)
-docker run --rm --network host skyjia/soco-cli:latest zones
 ```
 
 ### Speaker Control (sonos CLI)
 
 ```bash
 # Show help
-docker run --rm --network host skyjia/soco-cli:latest sonos --help
+docker run --rm --network host skyjia/soco-cli:latest -- --help
 
 # Get speaker info
 docker run --rm --network host skyjia/soco-cli:latest "Living Room" info
@@ -112,6 +117,19 @@ docker run --rm --network host skyjia/soco-cli:latest "Living Room" volume 50
 
 # List favorites
 docker run --rm --network host skyjia/soco-cli:latest "Living Room" list_favs
+
+# List all zones (requires speaker name)
+docker run --rm --network host skyjia/soco-cli:latest "Living Room" zones
+```
+
+### Using SPKR Environment Variable
+
+Set `SPKR` to omit speaker name in commands:
+
+```bash
+# Set default speaker via environment variable
+docker run --rm --network host -e SPKR="Living Room" skyjia/soco-cli:latest play
+docker run --rm --network host -e SPKR="Living Room" skyjia/soco-cli:latest volume 50
 ```
 
 ### Interactive Mode
@@ -126,7 +144,11 @@ docker run -it --rm --network host skyjia/soco-cli:latest -i
 # Start HTTP API server (port 8000)
 docker run -d --network host skyjia/soco-cli:latest http-api-server -p 8000
 
-# Test API
+# Test API (with SPKR set, omit speaker name)
+curl http://localhost:8000/play
+curl http://localhost:8000/volume/50
+
+# Test API (specify speaker name)
 curl http://localhost:8000/Living%20Room/play
 curl http://localhost:8000/Living%20Room/volume/50
 ```
@@ -136,6 +158,7 @@ curl http://localhost:8000/Living%20Room/volume/50
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `LOG_LEVEL` | Log level (NONE, CRITICAL, ERROR, WARN, INFO, DEBUG) | INFO |
+| `SPKR` | Default speaker name (allows omitting speaker in commands) | (empty) |
 
 ## Mount Points
 
@@ -143,6 +166,7 @@ curl http://localhost:8000/Living%20Room/volume/50
 |------|-------------|
 | `/config` | Config directory, stores soco-cli settings and aliases |
 | `/music` | Local music library path (read-only access) |
+| `/macros` | Macros file for HTTP API server custom actions |
 
 ## Network Configuration
 

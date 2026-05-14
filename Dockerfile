@@ -16,25 +16,28 @@ RUN useradd --create-home --shell /bin/bash sonos
 COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-# Create config directory
-RUN mkdir -p /home/sonos/.soco-cli && chown -R sonos:sonos /home/sonos
+# Create config directory and macros file (for HTTP API server)
+RUN mkdir -p /home/sonos/.soco-cli && \
+    touch /home/sonos/macros.txt && \
+    chown -R sonos:sonos /home/sonos
 
 # Create mount points
-RUN mkdir -p /config /music && chown -R sonos:sonos /config /music
+RUN mkdir -p /config /music /macros && chown -R sonos:sonos /config /music /macros
 
 # Copy entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && chown sonos:sonos /entrypoint.sh
 
-# Environment variables
+# Environment variables (can be overridden)
 ENV LOG_LEVEL=INFO
+ENV SPKR=
 
 # Set non-root user
 USER sonos
 WORKDIR /home/sonos
 
-# Mount points for config and music library
-VOLUME ["/config", "/music"]
+# Mount points for config, music library, and macros
+VOLUME ["/config", "/music", "/macros"]
 
 # Entrypoint and default command
 ENTRYPOINT ["/entrypoint.sh"]

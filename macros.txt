@@ -1,0 +1,9 @@
+# SoCo-CLI Macros File
+# Define custom HTTP API server actions
+# See: https://github.com/avantrec/soco-cli#macros-defining-custom-http-api-server-actions
+
+# Example macros (uncomment to use):
+# morning = volume 30 : play_fav "Morning Playlist"
+# night = volume 10 : pause
+
+# Empty file by default - no custom macros defined
