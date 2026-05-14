@@ -103,7 +103,7 @@ docker run --rm --network host skyjia/soco-cli:latest discover
 ### 扬声器控制 (sonos CLI)
 
 ```bash
-# 显示帮助
+# 显示 sonos CLI 帮助
 docker run --rm --network host skyjia/soco-cli:latest -- --help
 
 # 获取扬声器信息

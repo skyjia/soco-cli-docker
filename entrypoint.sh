@@ -41,6 +41,11 @@ case "$CMD" in
         shift
         exec sonos-http-api-server "$@"
         ;;
+    --)
+        # Pass remaining args directly to sonos (bypass routing)
+        shift
+        exec sonos "$@"
+        ;;
     --help|-h)
         # Show combined help
         echo "soco-cli Docker Image - Sonos Control Tools"
@@ -74,7 +79,7 @@ case "$CMD" in
         exit 0
         ;;
     "")
-        # No arguments - show help
+        # No arguments - show sonos help
         exec sonos --help
         ;;
     *)
